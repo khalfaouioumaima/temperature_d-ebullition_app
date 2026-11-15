@@ -172,14 +172,9 @@ def construire_decor():
     return "".join(morceaux)   # pas de saut de ligne : évite les erreurs de rendu
 
 
-# ---------------------- Interface ----------------------
-def choisir(molecule):
-    """Clic sur une suggestion : remplit la barre de recherche."""
-    st.session_state["saisie"] = molecule
-
-
+# ---------------------- Sécurité ----------------------
 def verifier_acces():
-    """Page de connexion : renvoie True quand le mot de passe est correct."""
+    """Page de connexion : nom d'utilisateur + mot de passe (comptes dans les Secrets)."""
     if st.session_state.get("acces"):
         return True
 
@@ -188,21 +183,36 @@ def verifier_acces():
                 unsafe_allow_html=True)
 
     with st.form("connexion"):
+        identifiant = st.text_input("Nom d'utilisateur")
         mdp = st.text_input("Mot de passe", type="password")
         envoye = st.form_submit_button("Se connecter")
 
     if envoye:
         try:
-            attendu = st.secrets["MOT_DE_PASSE"]
+            comptes = dict(st.secrets["utilisateurs"])
         except Exception:
-            st.error("Mot de passe non configuré (voir les secrets de l'app).")
+            st.error("Comptes non configurés (voir les secrets de l'app).")
             return False
-        if hmac.compare_digest(mdp.encode(), str(attendu).encode()):
+
+        nom_saisi = identifiant.strip().lower()
+        attendu = comptes.get(nom_saisi)
+        # On compare toujours, même si le compte n'existe pas
+        reference = str(attendu) if attendu is not None else ""
+        mdp_ok = hmac.compare_digest(mdp.encode(), reference.encode())
+
+        if attendu is not None and mdp_ok:
             st.session_state["acces"] = True
+            st.session_state["utilisateur"] = nom_saisi
             st.rerun()
         else:
-            st.error("Mot de passe incorrect.")
+            st.error("Nom d'utilisateur ou mot de passe incorrect.")
     return False
+
+
+# ---------------------- Interface ----------------------
+def choisir(molecule):
+    """Clic sur une suggestion : remplit la barre de recherche."""
+    st.session_state["saisie"] = molecule
 
 
 st.set_page_config(page_title="molVap", layout="centered")
@@ -315,6 +325,12 @@ with st.container(key="carte"):
     st.title("molVap")
     st.markdown("<p class='phrase'>De la formule à la température d'ébullition, en un clic.</p>",
                 unsafe_allow_html=True)
+
+    col_info, col_sortie = st.columns([3, 1])
+    col_info.caption(f"Connecté : {st.session_state.get('utilisateur', '')}")
+    if col_sortie.button("Se déconnecter", key="deconnexion"):
+        st.session_state.clear()
+        st.rerun()
 
     nom = st.text_input("Molécule (nom anglais, formule ou SMILES) :",
                         placeholder="ethanol", key="saisie")
