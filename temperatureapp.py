@@ -1,4 +1,6 @@
+import base64
 import hmac
+import os
 import unicodedata
 import urllib.request
 import urllib.parse
@@ -14,127 +16,136 @@ except Exception:
 TROUTON = 88.0
 P_ATM = 101325.0
 
-# ---------------------- Fond : dessins de labo en couleurs claires ----------------------
+# ---------------------- Background: pink science doodles ----------------------
 SVG_LABO = """<svg xmlns="http://www.w3.org/2000/svg" width="700" height="600" viewBox="0 0 700 600">
-<g stroke-linecap="round" stroke-linejoin="round" stroke-width="3">
+<defs>
+<g id="atom" fill="none" stroke="#f08cae" stroke-width="2.5">
+<ellipse rx="34" ry="12"/><ellipse rx="34" ry="12" transform="rotate(60)"/><ellipse rx="34" ry="12" transform="rotate(120)"/>
+<circle r="5" fill="#f08cae"/>
+</g>
+<g id="erl" stroke="#f08cae" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+<path d="M-27 20 L27 20 L38 38 Q42 48 32 48 L-32 48 Q-42 48 -38 38Z" fill="#f8b4cb"/>
+<path d="M-10 -45 L-10 -10 L-38 38 Q-42 48 -32 48 L32 48 Q42 48 38 38 L10 -10 L10 -45 M-15 -45 L15 -45" fill="none"/>
+</g>
+<g id="rond" stroke="#f08cae" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+<path d="M-31 8 A32 32 0 1 0 31 8Z" fill="#f8b4cb"/>
+<path d="M-9 -50 L-9 -18 A32 32 0 1 0 9 -18 L9 -50 M-14 -50 L14 -50" fill="none"/>
+</g>
+<g id="bec" stroke="#f08cae" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+<path d="M-24 0 L24 0 L24 30 Q24 38 16 38 L-16 38 Q-24 38 -24 30Z" fill="#f8b4cb"/>
+<path d="M-25 -30 L-25 30 Q-25 38 -17 38 L17 38 Q25 38 25 30 L25 -30" fill="none"/>
+<path d="M-25 -14 L-14 -14 M-25 -2 L-17 -2" fill="none" stroke-width="2"/>
+</g>
+<g id="bulb" fill="none" stroke="#f08cae" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+<path d="M-12 14 Q-30 -5 -20 -22 Q0 -42 20 -22 Q30 -5 12 14Z"/>
+<path d="M-10 22 L10 22 M-8 30 L8 30 M-5 36 L5 36"/>
+<path d="M0 -52 L0 -46 M-30 -40 L-26 -36 M30 -40 L26 -36 M-38 -12 L-32 -12 M38 -12 L32 -12"/>
+</g>
+<g id="mag" fill="none" stroke="#f08cae" stroke-width="2.5" stroke-linejoin="round">
+<path d="M-25 30 L-25 -5 A25 25 0 0 1 25 -5 L25 30 L13 30 L13 -5 A13 13 0 0 0 -13 -5 L-13 30Z" fill="#f8b4cb"/>
+</g>
+<path id="star" d="M0 -7 L2 -2 L7 0 L2 2 L0 7 L-2 2 L-7 0 L-2 -2Z" fill="#f08cae"/>
+</defs>
 
-<!-- Becher -->
-<path d="M63 88 L137 88 L137 132 Q137 145 124 145 L76 145 Q63 145 63 132Z" fill="#bcdcf7"/>
-<path d="M56 40 L62 40 L62 132 Q62 146 76 146 L124 146 Q138 146 138 132 L138 40 L144 40" fill="none" stroke="#aab4bf"/>
-<path d="M62 62 L78 62 M62 80 L72 80 M62 98 L78 98 M62 116 L72 116" fill="none" stroke="#c4ccd4" stroke-width="2"/>
+<g font-family="Comic Sans MS, Segoe Print, cursive, sans-serif" font-size="26" fill="#f08cae">
+<text x="150" y="70">E=mc²</text>
+<text x="430" y="62">V=IR</text>
+<text x="30" y="235">PV=nRT</text>
+<text x="400" y="245">E=ma</text>
+<text x="150" y="425">E=hf</text>
+<text x="335" y="425">H₂O</text>
+<text x="565" y="405">F=ma</text>
+<text x="160" y="565">pH</text>
+<text x="455" y="565">NaCl</text>
+</g>
 
-<!-- Erlenmeyer -->
-<path d="M297 125 L363 125 L380 150 Q386 162 372 162 L288 162 Q274 162 280 150Z" fill="#bfe8c3"/>
-<path d="M318 40 L318 90 L280 150 Q274 162 288 162 L372 162 Q386 162 380 150 L342 90 L342 40" fill="none" stroke="#aab4bf"/>
-<path d="M312 40 L348 40" fill="none" stroke="#aab4bf"/>
+<use href="#atom" x="80" y="70"/>
+<use href="#erl" x="330" y="90"/>
+<use href="#bulb" x="570" y="85"/>
+<use href="#rond" x="190" y="265"/>
+<use href="#atom" x="330" y="255"/>
+<use href="#mag" x="540" y="250"/>
+<use href="#bec" x="640" y="240"/>
+<use href="#atom" x="90" y="405"/>
+<use href="#bulb" x="275" y="405"/>
+<use href="#erl" x="500" y="415"/>
+<use href="#rond" x="80" y="545"/>
+<use href="#mag" x="265" y="545"/>
+<use href="#atom" x="375" y="540"/>
+<use href="#bec" x="610" y="540"/>
 
-<!-- Burette sur support -->
-<rect x="541" y="70" width="18" height="156" fill="#fbe9a0"/>
-<path d="M540 30 L540 226 M560 30 L560 226 M536 30 L564 30" fill="none" stroke="#aab4bf"/>
-<path d="M540 60 L530 60 M540 90 L534 90 M540 120 L530 120 M540 150 L534 150 M540 180 L530 180" fill="none" stroke="#c4ccd4" stroke-width="2"/>
-<path d="M534 238 L566 238 M550 226 L550 262" fill="none" stroke="#aab4bf"/>
-<circle cx="550" cy="280" r="5" fill="#f6b3c6"/>
-<path d="M610 20 L610 348 M570 348 L650 348 M610 110 L560 110 M610 190 L560 190" fill="none" stroke="#c4ccd4"/>
-<path d="M522 304 L524 336 Q524 342 530 342 L570 342 Q576 342 576 336 L578 304" fill="#f6c3d2" stroke="#aab4bf"/>
-
-<!-- Tubes a essai -->
-<path d="M73 300 L95 300 L95 350 Q95 365 84 365 Q73 365 73 350Z" fill="#f4a9a9"/>
-<path d="M107 285 L129 285 L129 350 Q129 365 118 365 Q107 365 107 350Z" fill="#bfe8c3"/>
-<path d="M141 320 L163 320 L163 350 Q163 365 152 365 Q141 365 141 350Z" fill="#fbe9a0"/>
-<path d="M72 250 L72 350 Q72 366 84 366 Q96 366 96 350 L96 250 M106 250 L106 350 Q106 366 118 366 Q130 366 130 350 L130 250 M140 250 L140 350 Q140 366 152 366 Q164 366 164 350 L164 250" fill="none" stroke="#aab4bf"/>
-
-<!-- Ballon a fond rond -->
-<path d="M209 470 A41 41 0 1 0 291 470Z" fill="#fbe9a0"/>
-<path d="M240 392 L240 436 A41 41 0 1 0 260 436 L260 392 M234 392 L266 392" fill="none" stroke="#aab4bf"/>
-
-<!-- Molecule d'eau -->
-<path d="M400 330 L368 362 M400 330 L432 362" fill="none" stroke="#c4ccd4"/>
-<circle cx="400" cy="330" r="17" fill="#f4a0a0"/>
-<circle cx="368" cy="362" r="10" fill="#dfe3e8"/>
-<circle cx="432" cy="362" r="10" fill="#dfe3e8"/>
-
-<!-- Benzene -->
-<path d="M512 480 L491 516 L449 516 L428 480 L449 444 L491 444Z" fill="none" stroke="#c4ccd4"/>
-<circle cx="470" cy="480" r="22" fill="none" stroke="#dfe3e8" stroke-width="2"/>
-<circle cx="512" cy="480" r="9" fill="#f6b3c6"/>
-<circle cx="491" cy="516" r="9" fill="#a8d0f0"/>
-<circle cx="449" cy="516" r="9" fill="#bfe8c3"/>
-<circle cx="428" cy="480" r="9" fill="#fbe9a0"/>
-<circle cx="449" cy="444" r="9" fill="#f4a0a0"/>
-<circle cx="491" cy="444" r="9" fill="#cfd4da"/>
-
-<!-- Methane -->
-<path d="M345 545 L315 520 M345 545 L375 520 M345 545 L315 570 M345 545 L375 570" fill="none" stroke="#c4ccd4"/>
-<circle cx="345" cy="545" r="14" fill="#cfd4da"/>
-<circle cx="315" cy="520" r="9" fill="#a8d0f0"/>
-<circle cx="375" cy="520" r="9" fill="#f6b3c6"/>
-<circle cx="315" cy="570" r="9" fill="#bfe8c3"/>
-<circle cx="375" cy="570" r="9" fill="#fbe9a0"/>
-
-<!-- Thermometre -->
-<rect x="630" y="415" width="4" height="70" fill="#f4a0a0" stroke="none"/>
-<circle cx="632" cy="486" r="9" fill="#f4a0a0" stroke="none"/>
-<path d="M624 390 L624 472 A12 12 0 1 0 640 472 L640 390 Q632 380 624 390" fill="none" stroke="#aab4bf"/>
-<path d="M642 405 L650 405 M642 425 L648 425 M642 445 L650 445" fill="none" stroke="#c4ccd4" stroke-width="2"/>
-
-<!-- Bulles -->
-<circle cx="200" cy="215" r="6" fill="none" stroke="#a8d0f0"/>
-<circle cx="225" cy="245" r="4" fill="#bfe8c3" stroke="none"/>
-<circle cx="450" cy="120" r="7" fill="none" stroke="#f6b3c6"/>
-<circle cx="480" cy="215" r="4" fill="#fbe9a0" stroke="none"/>
-<circle cx="440" cy="260" r="6" fill="none" stroke="#bfe8c3"/>
-<circle cx="40" cy="450" r="6" fill="none" stroke="#fbe9a0"/>
-<circle cx="110" cy="520" r="5" fill="#a8d0f0" stroke="none"/>
-<circle cx="180" cy="580" r="4" fill="#f6b3c6" stroke="none"/>
-<circle cx="660" cy="560" r="6" fill="none" stroke="#a8d0f0"/>
-<circle cx="250" cy="330" r="4" fill="#f4a0a0" stroke="none"/>
+<use href="#star" x="30" y="140"/><use href="#star" x="130" y="165"/>
+<use href="#star" x="250" y="170"/><use href="#star" x="420" y="150"/>
+<use href="#star" x="500" y="175"/><use href="#star" x="480" y="320"/>
+<use href="#star" x="20" y="330"/><use href="#star" x="235" y="350"/>
+<use href="#star" x="430" y="350"/><use href="#star" x="665" y="340"/>
+<use href="#star" x="30" y="485"/><use href="#star" x="205" y="485"/>
+<use href="#star" x="330" y="485"/><use href="#star" x="450" y="505"/>
+<use href="#star" x="665" y="470"/><use href="#star" x="545" y="590"/>
+<g fill="#f8b4cb">
+<circle cx="190" cy="130" r="3"/><circle cx="60" cy="200" r="3"/><circle cx="270" cy="215" r="3"/>
+<circle cx="460" cy="95" r="3"/><circle cx="650" cy="170" r="3"/><circle cx="600" cy="320" r="3"/>
+<circle cx="150" cy="350" r="3"/><circle cx="385" cy="330" r="3"/><circle cx="660" cy="410" r="3"/>
+<circle cx="40" cy="600" r="3"/><circle cx="230" cy="590" r="3"/><circle cx="530" cy="510" r="3"/>
 </g>
 </svg>"""
 
-FOND = "data:image/svg+xml," + urllib.parse.quote(SVG_LABO)
 
-CSS = """
+@st.cache_data(show_spinner=False)
+def charger_fond():
+    # Si un fichier "fond.png" est à côté de app.py, il est utilisé comme fond
+    if os.path.exists("fond.png"):
+        with open("fond.png", "rb") as f:
+            data = base64.b64encode(f.read()).decode()
+        return "data:image/png;base64," + data, "cover"
+    return "data:image/svg+xml," + urllib.parse.quote(SVG_LABO), "700px 600px"
+
+
+def construire_css():
+    fond, taille = charger_fond()
+    css = """
 <style>
 .stApp {
-    background-color: #ffffff;
+    background-color: #fde8ef;
     background-image: url("__FOND__");
-    background-size: 700px 600px;
+    background-size: __TAILLE__;
     background-attachment: fixed;
 }
 header[data-testid="stHeader"] { background: transparent; }
-h1 { color: #12355b; font-size: 2.4rem !important; }
-h2, h3 { color: #12355b; }
+h1 { color: #b83266; font-size: 2.4rem !important; }
+h2, h3 { color: #b83266; }
 .bandeau {
     height: 8px;
     border-radius: 8px;
     margin: 4px 0 20px 0;
-    background: linear-gradient(90deg, #f6b3c6, #fbe38e, #b6e3b6, #a8d0f0, #f4a0a0, #cfd4da);
+    background: linear-gradient(90deg, #f8b4cb, #f08cae, #fbc9da, #f6a5c0, #fde0ea);
 }
 .stTextInput input {
-    border: 2px solid #c9d6e6;
+    border: 2px solid #f6c1d4;
     border-radius: 12px;
     padding: 12px 16px;
     background: white;
 }
-.stTextInput input:focus { border-color: #1f6feb; }
+.stTextInput input:focus { border-color: #e0679a; }
 [data-testid="stForm"],
 [data-testid="stColumn"],
 [data-testid="column"] {
-    background: rgba(255, 255, 255, 0.93);
-    border: 2px solid #dbe6f2;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #f6c1d4;
     border-radius: 16px;
     padding: 14px 18px;
 }
 .stButton button,
 [data-testid="stFormSubmitButton"] button {
     border-radius: 10px;
-    border: 2px solid #a8d0f0;
-    background: #eaf4fd;
-    color: #12355b;
+    border: 2px solid #f08cae;
+    background: #fff0f5;
+    color: #b83266;
 }
-[data-testid="stMetricValue"] { color: #1f6feb; font-weight: 600; }
+[data-testid="stMetricValue"] { color: #d6336c; font-weight: 600; }
 </style>
-""".replace("__FOND__", FOND)
+"""
+    return css.replace("__FOND__", fond).replace("__TAILLE__", taille)
 
 
 def enlever_accents(texte):
@@ -148,7 +159,7 @@ def temperature_ebullition(nom):
     try:
         c = Chemical(enlever_accents(nom), P=P_ATM)
     except Exception:
-        res["erreur"] = "Molécule introuvable. Essayez le nom anglais, la formule ou le SMILES."
+        res["erreur"] = "Molecule not found. Try the English name, the formula or the SMILES."
         return res
 
     res["nom_officiel"] = c.name
@@ -156,13 +167,13 @@ def temperature_ebullition(nom):
     res["smiles"] = c.smiles
 
     if c.Tb:
-        res.update(T_K=c.Tb, methode="Valeur tabulée", fiabilite="très bonne")
+        res.update(T_K=c.Tb, methode="Tabulated value", fiabilite="very good")
         return res
     try:
         T = c.VaporPressure.solve_prop(P_ATM)
         if T:
-            res.update(T_K=T, methode="Pression de vapeur : Psat(T) = 1 atm",
-                       fiabilite="très bonne")
+            res.update(T_K=T, methode="Vapor pressure: Psat(T) = 1 atm",
+                       fiabilite="very good")
             return res
     except Exception:
         pass
@@ -170,17 +181,17 @@ def temperature_ebullition(nom):
         try:
             T = Joback(c.smiles).estimate()["Tb"]
             if T:
-                res.update(T_K=T, methode="Estimation de Joback",
-                           fiabilite="moyenne (± 10 à 30 K)")
+                res.update(T_K=T, methode="Joback estimation",
+                           fiabilite="medium (± 10 to 30 K)")
                 return res
         except Exception:
             pass
     if c.Hvap_Tbm:
-        res.update(T_K=c.Hvap_Tbm / TROUTON, methode="Règle de Trouton",
-                   fiabilite="faible (fausse pour les liquides associés)")
+        res.update(T_K=c.Hvap_Tbm / TROUTON, methode="Trouton's rule",
+                   fiabilite="low (inaccurate for associated liquids)")
         return res
 
-    res["erreur"] = "Aucune méthode n'a pu calculer T_éb pour cette molécule."
+    res["erreur"] = "No method could compute the boiling point for this molecule."
     return res
 
 
@@ -217,47 +228,47 @@ def afficher_3d(sdf):
 def verifier_connexion():
     if st.session_state.get("auth"):
         return True
-    st.title("🔐 Connexion")
+    st.title("🧪 Hi chemist")
     st.markdown('<div class="bandeau"></div>', unsafe_allow_html=True)
     with st.form("login"):
-        u = st.text_input("Nom d'utilisateur")
-        p = st.text_input("Mot de passe", type="password")
-        ok = st.form_submit_button("Se connecter")
+        u = st.text_input("Username")
+        p = st.text_input("Password", type="password")
+        ok = st.form_submit_button("Log in")
     if ok:
         try:
             users = st.secrets["users"]
         except Exception:
-            st.error("Aucun compte configuré (section [users] manquante dans les Secrets).")
+            st.error("No account configured (missing [users] section in Secrets).")
             return False
         if u in users and hmac.compare_digest(p, str(users[u])):
             st.session_state["auth"] = True
             st.session_state["user"] = u
             st.rerun()
         else:
-            st.error("Nom d'utilisateur ou mot de passe incorrect.")
+            st.error("Incorrect username or password.")
     return False
 
 
-# ---------------------- Config (doit être la 1re commande Streamlit) ----------------------
-st.set_page_config(page_title="Température d'ébullition", page_icon="🧪", layout="wide")
-st.markdown(CSS, unsafe_allow_html=True)
+# ---------------------- Config (must be the first Streamlit command) ----------------------
+st.set_page_config(page_title="Boiling point", page_icon="🧪", layout="wide")
+st.markdown(construire_css(), unsafe_allow_html=True)
 
-# ---------------------- Connexion ----------------------
+# ---------------------- Login ----------------------
 if not verifier_connexion():
     st.stop()
 
 with st.sidebar:
-    st.write(f"Connecté : {st.session_state['user']}")
-    if st.button("Se déconnecter"):
+    st.write(f"Logged in as: {st.session_state['user']}")
+    if st.button("Log out"):
         st.session_state.clear()
         st.rerun()
 
-# ---------------------- Accueil ----------------------
-st.title("🧪 Température d'ébullition + structure 3D")
+# ---------------------- Home ----------------------
+st.title("🧪 Boiling point + 3D structure")
 st.markdown('<div class="bandeau"></div>', unsafe_allow_html=True)
-st.caption("Entrez une molécule : température d'ébullition et structure 3D.")
+st.caption("Enter a molecule: get its boiling point and 3D structure.")
 
-nom = st.text_input("Molécule (nom anglais, formule ou SMILES) :", placeholder="ethanol")
+nom = st.text_input("Molecule (English name, formula or SMILES):", placeholder="ethanol")
 
 if nom.strip():
     r = temperature_ebullition(nom)
@@ -267,13 +278,13 @@ if nom.strip():
         col1, col2 = st.columns(2)
         with col1:
             st.subheader(f"{r['nom_officiel']} ({r['formule']})")
-            st.metric("T_éb", f"{r['T_K']:.1f} K")
+            st.metric("Boiling point", f"{r['T_K']:.1f} K")
             st.write(f"**{r['T_K'] - 273.15:.1f} °C**")
-            st.write("**Méthode :**", r["methode"])
-            st.write("**Fiabilité :**", r["fiabilite"])
+            st.write("**Method:**", r["methode"])
+            st.write("**Reliability:**", r["fiabilite"])
         with col2:
             sdf = telecharger_sdf(r["smiles"], r["nom_officiel"])
             if sdf:
                 afficher_3d(sdf)
             else:
-                st.info("Structure 3D indisponible (internet ou molécule absente).")
+                st.info("3D structure unavailable (no internet or molecule not found).")
