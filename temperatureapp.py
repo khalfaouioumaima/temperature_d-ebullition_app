@@ -1,3 +1,4 @@
+import hmac
 import unicodedata
 import urllib.request
 import urllib.parse
@@ -91,7 +92,41 @@ def afficher_3d(sdf):
     """, height=400)
 
 
+def verifier_connexion():
+    if st.session_state.get("auth"):
+        return True
+    st.title("🔐 Connexion")
+    with st.form("login"):
+        u = st.text_input("Nom d'utilisateur")
+        p = st.text_input("Mot de passe", type="password")
+        ok = st.form_submit_button("Se connecter")
+    if ok:
+        try:
+            users = st.secrets["users"]
+        except Exception:
+            st.error("Aucun compte configuré (section [users] manquante dans les Secrets).")
+            return False
+        if u in users and hmac.compare_digest(p, str(users[u])):
+            st.session_state["auth"] = True
+            st.session_state["user"] = u
+            st.rerun()
+        else:
+            st.error("Nom d'utilisateur ou mot de passe incorrect.")
+    return False
+
+
+# ---------------------- Config (doit être la 1re commande Streamlit) ----------------------
 st.set_page_config(page_title="Température d'ébullition", page_icon="🔥", layout="wide")
+
+# ---------------------- Connexion ----------------------
+if not verifier_connexion():
+    st.stop()
+
+with st.sidebar:
+    st.write(f"Connecté : {st.session_state['user']}")
+    if st.button("Se déconnecter"):
+        st.session_state.clear()
+        st.rerun()
 
 # ---------------------- Design ----------------------
 st.markdown("""
