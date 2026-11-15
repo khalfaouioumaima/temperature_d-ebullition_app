@@ -91,8 +91,27 @@ def afficher_3d(sdf):
     """, height=400)
 
 
-st.set_page_config(page_title="Température d'ébullition", layout="wide")
-st.title("Température d'ébullition + structure 3D")
+st.set_page_config(page_title="Température d'ébullition", page_icon="🔥", layout="wide")
+
+# ---------------------- Design ----------------------
+st.markdown("""
+<style>
+.stApp { background: #f4f7fb; }
+h1 { color: #12355b; font-size: 2.4rem !important; }
+h2, h3 { color: #12355b; }
+.stTextInput input {
+    border: 2px solid #c9d6e6;
+    border-radius: 12px;
+    padding: 12px 16px;
+    background: white;
+}
+.stTextInput input:focus { border-color: #1f6feb; }
+[data-testid="stMetricValue"] { color: #1f6feb; font-weight: 600; }
+</style>
+""", unsafe_allow_html=True)
+
+st.title("🔥 Température d'ébullition + structure 3D")
+st.caption("Entrez une molécule : température d'ébullition et structure 3D.")
 
 nom = st.text_input("Molécule (nom anglais, formule ou SMILES) :", placeholder="ethanol")
 
@@ -114,7 +133,3 @@ if nom.strip():
                 afficher_3d(sdf)
             else:
                 st.info("Structure 3D indisponible (internet ou molécule absente).")
-            
-            
-            
-            
