@@ -104,8 +104,8 @@ if nom.strip():
         col1, col2 = st.columns(2)
         with col1:
             st.subheader(f"{r['nom_officiel']} ({r['formule']})")
-            st.metric("T_éb", f"{r['T_K']:.1f} K", f"{r['T_K'] - 273.15:.1f} °C",
-                      delta_color="off")
+            st.metric("T_éb", f"{r['T_K']:.1f} K")
+            st.write(f"**{r['T_K'] - 273.15:.1f} °C**")
             st.write("**Méthode :**", r["methode"])
             st.write("**Fiabilité :**", r["fiabilite"])
         with col2:
@@ -114,4 +114,7 @@ if nom.strip():
                 afficher_3d(sdf)
             else:
                 st.info("Structure 3D indisponible (internet ou molécule absente).")
+            
+            
+            
             
